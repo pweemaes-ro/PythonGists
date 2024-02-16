@@ -7,11 +7,12 @@ similar way."""
 from collections.abc import Callable
 from functools import wraps, update_wrapper
 from typing import TypeVar, ParamSpec, Any, TypeAlias
-from mypy_extensions import NamedArg
+from mypy_extensions import NamedArg, Arg
 
 T = TypeVar('T')
 P = ParamSpec('P')
-G: TypeAlias = Callable[[int, NamedArg(int, 'exponent')], int]
+# noinspection PyUnresolvedReferences
+G: TypeAlias = Callable[[Arg(int, 'base'), NamedArg(int, 'exponent')], int]
 
 
 def decorator(func: Callable[P, T]) -> Callable[P, T]:
@@ -47,7 +48,7 @@ def decorator(func: Callable[P, T]) -> Callable[P, T]:
 
 
 @decorator
-def decorated_function(base: int, *, exponent: int) -> int:
+def decorated_function_1(base: int, *, exponent: int) -> int:
 	"""Just an example of a function using a decorator. Return base raised to
 	the exponent."""
 	
@@ -56,12 +57,25 @@ def decorated_function(base: int, *, exponent: int) -> int:
 	return int(base ** exponent)
 
 
+def decorated_function_2(base: int, *, exponent: int) -> int:
+	"""Just an example of a function using a decorator. Return base raised to
+	the exponent."""
+	
+	# int() is required since ** has type Any, which causes Mypy to complain:
+	# 'error: Returning Any from function declared to return "int".'
+	return int(base ** exponent)
+
+
+decorated_function_2 = decorator(decorated_function_2)
+
 n = 5
 for _ in range(n):
 	# noinspection PyArgumentList
-	decorated_function(2, exponent=3)
+	decorated_function_1(2, exponent=3)
+	# noinspection PyArgumentList
+	decorated_function_2(2, exponent=3)
 
-assert getattr(decorator, "state", {}).get('nr_calls', 0) == n
+assert getattr(decorator, "state", {}).get('nr_calls', 0) == 2 * n
 
 
 # 2. Using a decorator class
@@ -109,20 +123,23 @@ def class_decorated_1(base: int, *, exponent: int) -> int:
 	return int(base ** exponent)
 
 
-@Decorator
 def class_decorated_2(base: int, *, exponent: int) -> int:
 	"""Example function decorated by Decorator class."""
 	
 	return int(base ** exponent)
 
 
+# Cannot assign Decorator() to class_decorated_2, since this is already
+# implicitly typed as Callable[[int, int], int] and therefore a Decorator
+# object should not be assigned to it...
+new_class_decorated_2 = Decorator(class_decorated_2)
 n = 7
 for _ in range(n):
 	class_decorated_1(2, exponent=3)
-	class_decorated_2(2, exponent=3)
+	new_class_decorated_2(2, exponent=3)
 
 assert (class_decorated_1.get_state('nr_calls') ==
-        class_decorated_2.get_state('nr_calls') == n)
+        new_class_decorated_2.get_state('nr_calls') == n)
 
 
 class DecoratorWithArgs:
@@ -142,6 +159,8 @@ class DecoratorWithArgs:
 
 	def __call__(self, func: G) -> G:
 		
+		self.func = self.func or func
+
 		@wraps(func)
 		def wrapper(base: int, exponent: int) -> int:
 			"""The wrapper function."""
@@ -149,6 +168,7 @@ class DecoratorWithArgs:
 			print(f"class: Preprocessing here... ({base=}, {exponent=})")
 
 			assert self.func
+			# noinspection PyArgumentList
 			result = self.func(base, exponent=exponent)
 
 			# modify state
@@ -177,26 +197,27 @@ class DecoratorWithArgs:
 		cls.state[name] = value
 	
 
-@DecoratorWithArgs(5)
+decorator_arg = 7
+
+
+@DecoratorWithArgs(decorator_arg)
 def class_decorated_3(base: int, *, exponent: int) -> int:
 	"""A simple function to illustrate DecoratorWithArgs class decorator."""
 	return int(base ** exponent)
 
 
-# class_decorated_3 = DecoratorWithArgs(5)(class_decorated_3)
+def class_decorated_4(base: int, *, exponent: int) -> int:
+	"""A simple function to illustrate DecoratorWithArgs class decorator."""
+	return int(base ** exponent)
 
 
-# @DecoratorWithArgs(5)
-# def class_decorated_4(base: int, *, exponent: int) -> int:
-# 	"""A simple function to illustrate DecoratorWithArgs class decorator."""
-# 	return int(base ** exponent)
-#
-#
-# class_decorated_4 = DecoratorWithArgs(5)(class_decorated_4)
+class_decorated_4 = DecoratorWithArgs(decorator_arg)(class_decorated_4)
 
-# n = 5
+n = 5
 
-# for _ in range(n):
-# 	class_decorated_3(2, exponent=3)
-# 	class_decorated_4(2, exponent=3)
-# assert DecoratorWithArgs.get_class_state('nr_calls') == 2 * (n + 5)
+for _ in range(n):
+	# noinspection PyArgumentList
+	print(class_decorated_3(2, exponent=3))
+	# noinspection PyArgumentList
+	print(class_decorated_4(3, exponent=4))
+assert DecoratorWithArgs.get_class_state('nr_calls') == 2 * (n + decorator_arg)
