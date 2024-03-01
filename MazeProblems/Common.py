@@ -1,3 +1,4 @@
+"""Types and example data for maze code."""
 from typing import TypeAlias
 
 
