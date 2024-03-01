@@ -1,8 +1,9 @@
 """Several examples with explanation concerning covariance, contravariance and
 invariance in Python"""
-
 from copy import copy
-from typing import Callable, TypeAlias, TypeVar
+from typing import (Generic, Callable, TypeAlias, TypeVar, NewType, Any,
+	ParamSpec)
+import logging
 
 
 class Animal:
@@ -51,7 +52,7 @@ class Poodle(Dog):
 		replaced by a similar function expecting a Poodle."""
 		
 		print(f'{self.__class__.__name__} says: '
-		      '"Ooh yeah! I love the way you stroke my... back."')
+			  '"Ooh yeah! I love the way you stroke my... back."')
 
 
 class Cat(Animal):
@@ -93,6 +94,7 @@ def animal_creator(index: int) -> Animal:
 T = TypeVar("T")
 
 CreateFunction: TypeAlias = Callable[[int], T]
+# type CreateFunction = Callable[[int], T]
 
 
 def puppy_generator(nr_puppies: int, create_function: CreateFunction[Dog]) \
@@ -197,7 +199,7 @@ def contravariant_demo() -> None:
 	# the function, but not variables of supertype U, since functions on T may
 	# not be available on variables of supertype U.
 	
-	# petting_zoo(pet_poodle)       # Error
+	# petting_zoo(pet_poodle)	   # Error
 	petting_zoo(pet_dog)
 	petting_zoo(pet_animal)
 
@@ -231,29 +233,29 @@ def clone_my_doggo(clone_function: CloneFunction[Dog]) -> Dog:
 
 def invariant_demo() -> None:
 	"""clone_my_doggo expects a CloneFunction[T] where T is Dog, that is a
-	function with signature Callable[[Dog], Dog]. Since here Dog is both an
-	argument (which is always contravariant, not allowing subtypes of Dog) and
+	function with signature Callable[[Dog], Dog]. Since here Dog is both a
+	parameter (which is always contravariant, not allowing subtypes of Dog) and
 	a return type (which is always covariant, not allowing a supertype of Dog),
 	only a function which expects a param of type Dog and returns a value of
 	type Dog is allowed, that is, the clone_function is invariant in both the
-	argument type and the return type."""
+	parameter type and the return type."""
 	
 	# Following fails for Mypy:
-	# a) clone_my_doggo's argument is typed as a Callable[[Dog], Dog], that is,
-	#    it returns a Dog, which cannot be assigned to a variable typed as
-	#    poodle, since Dog is not a subtype of Poodle, that is, a Dog is not
-	#    necessarilly a Poodle.
-	# b) clone_my_doggo's argument is typed as a Callable[[Dog], Dog], which is
-	#    invariant in both argument and return type, so clone_poodle typed as
-	#    Callable[[Poodle], Poodle] is not safe.
+	# a) clone_my_doggo's parameter is typed as a Callable[[Dog], Dog], that
+	# 	is, it returns a Dog, which cannot be assigned to a variable typed as
+	# 	poodle, since Dog is not a subtype of Poodle, that is, a Dog is not
+	# 	necessarilly a Poodle.
+	# b) clone_my_doggo's parameter is typed as a Callable[[Dog], Dog], which
+	# 	is invariant in both parameter and return type, so clone_poodle typed
+	# 	as Callable[[Poodle], Poodle] is not safe.
 	# poodle: Poodle = clone_my_doggo(clone_poodle)
 	
 	# noinspection PyUnusedLocal
 	dog: Dog = clone_my_doggo(clone_dog)
 	
-	# a) clone_my_doggo's argument is typed as a Callable[[Dog], Dog], which is
-	#    invariant in both argument and return type, so clone_poodle typed as
-	#    Callable[[Poodle], Poodle] is not safe.
+	# a) clone_my_doggo's parameter is typed as a Callable[[Dog], Dog], which
+	# 	is invariant in both parameter and return type, so clone_poodle typed
+	# 	as Callable[[Poodle], Poodle] is not safe.
 	# NOTE that it IS okay to assign a Dog to a variable typed Animal, since
 	# Dog is a subtype of Animal, that is, a Dog is an Animal.
 	# animal: Animal = clone_my_doggo(clone_animal)
@@ -263,19 +265,149 @@ covariant_demo()
 contravariant_demo()
 invariant_demo()
 
-"""Conclusion:
-1. Callable[[...], T] is covariant in its return type T:
+"""Conclusions:
+
+1. Callable[[...], T] is covariant in type variable T:
 - supplying a Callable[[...], T] is safe.
-- supplying a Callable[[...], S] with S a subtype of T is safe.
-- supplying a Callable[[...], U] with U a supertype of T is unsafe.
-2. Callable[[T], ... is contravariant in its parameter type T:
+- supplying a Callable[[...], S] with S <: T is safe.
+- supplying a Callable[[...], U] with T <: U is unsafe.
+
+2. Callable[[T], ... is contravariant in type variable T:
 - supplying a Callable[[T], ...] is safe.
-- supplying a Callable[[U], ...] with U a supertype of T is safe.
-- supplying a Callable[[S], ...] with S a subtype of T is unsafe.
-3. Callable[[T], T] is invariant in both its parameter and its return type
+- supplying a Callable[[U], ...] with T <: U is safe.
+- supplying a Callable[[S], ...] with S <: T is unsafe.
+
+3. Callable[[T], T] is invariant in type variable T.
 - supplying a Callable[[T], T] is safe.
-- supplying a Callable[[S], ...] with S a subtype of T is unsafe.
-- supplying a Callable[[U], ...] with U a supertype of T is unsafe.
-- supplying a Callable[[...], S] with S a subtype of T is unsafe.
-- supplying a Callable[[...], U] with U a supertype of T is unsafe.
+- supplying a Callable[[S], ...] with S <: T is unsafe.
+- supplying a Callable[[U], ...] with T <: U is unsafe.
+- supplying a Callable[[...], S] with S <: T is unsafe.
+- supplying a Callable[[...], U] with T <: U is unsafe.
+
+4. list[T] is invariant in type variable T, since lists are mutable and should
+   only contain objects of a single type. If it was covariant in T, we could
+   append an item of S <:T to a variable of type list[T].
+   
+5. Sequence[T] is covariant in type variable T, since Sequence is immutable, so
+   adding items (of type T or other type) is impossible."""
+
+C = TypeVar('C', covariant=True)
+# C = TypeVar('C')
+
+
+# class Box(Generic[T_co]):  # this type is declared covariant
+class Box(Generic[C]):  # this type is declared covariant
+	"""A generic class that overrules default (invariant) to covariant."""
+	def __init__(self, content: C) -> None:
+		self._content = content
+
+	def get_content(self) -> C:
+		"""Return content."""
+		return self._content
+
+
+# noinspection PyUnusedLocal
+def look_into(box: Box[Animal]) -> None:
+	"""Function taking box of Animal as param."""
+	...
+
+
+my_box = Box(Cat())
+# Since Box is covariant in type T_co, it is allowed to pass subtype Box(Cat())
+# as param to look_into (since Box(Cat) is subtype of Box(Animal), and Box is
+# covariant in its type variable T_co.
+look_into(my_box)  # OK, but mypy would complain here for an invariant type
+
+"""NewType vs. alias:
+
+- name = NewType(name, tp) is considered a subtype of tp by static type
+  checkers. As a consequence, you cannot assign a tp value to name. To create a
+  variable of type name, use name(value) where value is of type tp.
+
+	UserID = NewType("UserID", int)
+	
+	my_userid = UserID(5)	   # Fine
+	other_userid: UserID = 5	# should be flagged as error by typecheckers.
+	
+- Use TypeAlias to indicate that an assignment should be recognized as a proper
+  type alias definition by type checkers.
+
+	UserID = int
+	my_userid = UserId(5)   # Fine
+	my_userid = 5		   # Also fine (5 and UserID are both of type int)
+	
 """
+UserID = NewType("UserID", int)	 # Create type UserID as SUBTYPE of type int
+
+UserIDToName: dict[UserID, str] = {UserID(1): "Paul"}
+
+
+def get_username(user_id: UserID) -> str:
+	"""get username"""
+	return UserIDToName.get(user_id, "Not Found")
+
+
+def get_userid(name: str) -> UserID:
+	"""get user id"""
+	for user_id, _name in UserIDToName.items():
+		if _name == name:
+			return user_id
+	return UserID(-1)				   # Fine
+	# return -1						   # Error
+
+
+# user_id_1: UserID = 4				   # Error
+some_int_1: int = UserID(1)			 # Fine
+get_username(UserID(1))				 # Fine
+# get_username(1)						 # Error
+some_int_2: int = get_userid("Paul")    # Fine
+user_id_2: UserID = get_userid("Paul")  # Fine
+
+UserIDAlias: TypeAlias = int				   # type UserIDAlias is EQUIVALENT to type int
+UserIDAliasToName: dict[UserIDAlias, str] = {UserIDAlias(1): "Paul"}
+
+
+def _get_username(user_id: UserIDAlias) -> str:
+	return UserIDAliasToName.get(user_id, "Not Found")
+
+
+def _get_userid(name: str) -> UserIDAlias:
+	for user_id, _name in UserIDAliasToName.items():
+		if _name == name:
+			return user_id
+	return -1
+
+
+_user_id: UserIDAlias = 4	   # Error
+_some_int: int = 1   # Fine
+print(_get_username(_some_int))
+some_int = _get_userid("Paul")
+print(some_int)
+
+
+z: tuple[Any, ...] = ("foo", "bar")
+print(z)
+# These reassignments are OK: plain `tuple` is equivalent to `tuple[Any, ...]`
+z = (1, 2, 3)
+print(z)
+z = ()
+print(z)
+	
+
+P = ParamSpec('P')
+
+
+# def add_logging[T, **P](f: Callable[P, T]) -> Callable[P, T]:
+def add_logging(f: Callable[P, T]) -> Callable[P, T]:
+	"""A type-safe decorator to add logging to a function."""
+	def inner(*args: P.args, **kwargs: P.kwargs) -> T:
+		"""The replacement func"""
+		logging.info(f'{f.__name__} was called')
+		return f(*args, **kwargs)
+	return inner
+
+
+@add_logging
+def add_two(x: float, y: float) -> float:
+	"""Add two numbers together."""
+	return x + y
