@@ -6,8 +6,8 @@ Location: TypeAlias = tuple[int, int]
 Locations: TypeAlias = list[Location]
 Path: TypeAlias = dict[Location, int]
 NrRightTurns: TypeAlias = int
-PathInfo: TypeAlias = tuple[NrRightTurns, Locations]
-Maze = list[str]
+PathInfo: TypeAlias = tuple[NrRightTurns, Path]
+_Maze = list[str]
 
 __all_path_infos: list[PathInfo] = []
 __a_maze_ing = [
