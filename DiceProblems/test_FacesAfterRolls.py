@@ -7,18 +7,17 @@ dice = {face: face for face in faces}
 
 
 @pytest.mark.parametrize(
-	["roll", "result"],
 	# ("L", {"B": "B", "U": "R", "F": "F", "D":"L", "L":"U",
 	#        "R":"D"})
-	# means that due to a Left roll ("L")
+	# means that after a Left roll ("L")
 	# - the "B" face is the "B" face from before the roll
 	# - the "U" face is the "R" face from before the roll.
 	# - etc.
-	[("L", {"B": "B", "U": "R", "F": "F", "D": "L", "L": "U", "R": "D"}),
-	 ("R", {"B": "B", "U": "L", "F": "F", "D": "R", "L": "D", "R": "U"}),
-	 ("F", {"B": "D", "U": "B", "F": "U", "D": "F", "L": "L", "R": "R"}),
-	 ("B", {"B": "U", "U": "F", "F": "D", "D": "B", "L": "L", "R": "R"}),
-	 ]
+	["roll", "result"],
+	[("L", {"B": "B", "F": "F", "U": "R", "D": "L", "L": "U", "R": "D"}),
+	 ("R", {"B": "B", "F": "F", "U": "L", "D": "R", "L": "D", "R": "U"}),
+	 ("F", {"L": "L", "R": "R", "B": "D", "U": "B", "F": "U", "D": "F"}),
+	 ("B", {"L": "L", "R": "R", "B": "U", "U": "F", "F": "D", "D": "B"})]
 )
 def test_single_rolls(roll: str, result: dict[str, str]) -> None:
 	"""Test all single rolls."""
@@ -30,21 +29,10 @@ def test_single_rolls(roll: str, result: dict[str, str]) -> None:
 
 
 @pytest.mark.parametrize(
-	["rolls"],
-	[
-		["RL"],
-		["LR"],
-		["FB"],
-		["BF"],
-		["RRLL"],
-		["LLRR"],
-		["FFBB"],
-		["BBFF"],
-		["RRRR"],
-		["LLLL"],
-		["FFFF"],
-		["BBBB"],
-	]
+	"rolls",
+	["RL", "LR", "FB", "BF",
+	 "RRLL", "LLRR", "FFBB", "BBFF",
+	 "RRRR", "LLLL", "FFFF", "BBBB"],
 )
 def test_neutralizing_rolls(rolls: str) -> None:
 	"""Test pairs and quadruple rolls that have no effect. It may seem
