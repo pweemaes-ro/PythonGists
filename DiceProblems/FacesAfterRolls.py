@@ -1,5 +1,6 @@
 """ Dice problem: Given an initial configuration of a dice, and a sequence of
 rolls, what is the dice config after the roll?"""
+from typing import TypeAlias
 
 # We label each side according to initial configuration.
 faces = ("U", "D", "L", "R", "F", "B")
@@ -14,12 +15,17 @@ roll_to_transformations = {'L': LEFT_TRANSFORM,
                            'B': FRONT_TRANSFORM[::-1]}
 
 
-def do_rolls(dice: dict[str, str], rolls: str) -> dict[str, str]:
-	"""Perform the specified rolls"""
+Face: TypeAlias = str
+FaceValue: TypeAlias = str
+Dice: TypeAlias = dict[Face, FaceValue]
+
+
+def do_rolls(dice: Dice, rolls: str) -> Dice:
+	"""Perform the specified roll(s) and return Dice after rolls."""
 	
 	for roll in rolls:
-		transformation: str = roll_to_transformations[roll]
-		new_dice: dict[str, str] = dict()
+		transformation = roll_to_transformations[roll]
+		new_dice = dict()
 		for current_face, value in dice.items():
 			if (current_face_index := transformation.find(current_face)) != -1:
 				new_dice[transformation[(current_face_index + 1) % 4]] = value
