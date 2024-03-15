@@ -25,8 +25,8 @@ class Maze:
 			finish and putting completed paths in a list, that is eventually
 			returned to the caller."""
 			
-			# Append current current_start position to the path
-			path[current_start] = len(path) + 1
+			# Append current_start position to the path dict
+			path[current_start] = len(path)
 			
 			if current_start == finish:
 				if self.is_valid_path(path, required):
@@ -50,15 +50,17 @@ class Maze:
 	@staticmethod
 	def is_valid_path(path: Path, required: list[Locations]) -> bool:
 		"""Return True if all required paths are in the path, else False."""
-	
-		for locations in required:
-			if (idx := path.get(locations[0], None)) is None:
-				return False
-			else:
-				if not all(path.get(locations[i], None) == idx + i
-				           for i in range(1, len(locations))):
-					return False
+		
+		for required_locations in required:
 
+			# First location of each required part must be in path
+			if (idx := path.get(required_locations[0], None)) is None:
+				return False
+			
+			if not all(path.get(required_locations[i], None) == idx + i
+			           for i in range(1, len(required_locations))):
+				return False
+			
 		return True
 	
 	@staticmethod
@@ -148,7 +150,7 @@ if __name__ == "__main__":
 	_finish = (10, 5)
 	_required = [
 		((3, 1), (4, 1), (5, 1), (6, 1), (7, 1)),   # → * 5 on line 1
-		((6, 3), (6, 4), (6, 5)),                   # ↓ * 3 in lines 3, 4, 5
+		((6, 3), (6, 4), (6, 5)),                   # ↓ * 3 on lines 3, 4, 5
 		((1, 5), (2, 5), (3, 5), (4, 5)),           # → * 4 on line 5 (first)
 		((7, 5), (8, 5), (9, 5), (10, 5)),          # → * 4 on line 5 (second)
 		((7, 9), (6, 9), (5, 9)),                   # ← * 3 on line 9
