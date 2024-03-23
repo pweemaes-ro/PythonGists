@@ -25,9 +25,8 @@ def twos_complement(n: int) -> int:
 	# b) add 1 to get 0b0010100.
 
 	# Many systems are two's complement systems and then the two's complement
-	# of n is simply -n. Only use this function on systems that are not two's
-	# complement systems. On two's complement systems this function will be
-	# replaced by function neg_n (see below).
+	# of n is simply -n. This function also works on systems that don't
+	# represent negative integers in two's complement!
 	
 	return ~n + 1
 
@@ -80,8 +79,8 @@ class QuickFib:
 		
 		@lru_cache()
 		def __pow__(self, power: int) -> QuickFib.FibMatrix:
-			"""Return matrix ** power. Is rRecursive, but should be safe as
-			long as no powers with more than 400 or so set bits are used..."""
+			"""Return matrix ** power. Is recursive, but should be safe as long
+			as no powers with more than 400 or so set bits are used..."""
 			
 			assert isinstance(power, int)
 			assert power >= 1
@@ -94,12 +93,10 @@ class QuickFib:
 			# out k = 0 <=> power = 2 ** k = 1, see above).
 			assert len(list(QuickFib.get_exps(power))) == 1
 			
-			# It may seem smart to assign self ** power to a var to avoid
-			# calculating twice, but the results of ** are cached, so there's
-			# not much to gain... We use simple math rule:
-			# m ** power = m ** (power / 2) * m ** (power / 2)
-			m = self ** (power >> 1)
-			return m * m
+			# We use simple math rule (for power a power of 2):
+			#   m ** power = m ** (power // 2) * m ** (power // 2)
+			h = self ** (power >> 1)
+			return h * h
 			
 		def __repr__(self) -> str:
 			return f"{self.__class__.__name__}({self.matrix})"
@@ -139,10 +136,10 @@ class QuickFib:
 	@staticmethod
 	def get_exps(n: int) -> Generator[int, None, None]:
 		"""Returns list exps = [2 ** k_1, 2 ** k_2, 2 ** k_3, ..., 2 ** k_m]
-		with k_1 > k_2 > k_3 > ... > k_m, such that n = sum(exps)."""
+		with all k_i integers >= 0 and k_1 > k_2 > k_3 > ... > k_m, such that
+		n = sum(exps)."""
 		
-		# Example: since bin(236) = 0b11101100 <=>
-		# 236 = 4 + 8 + 32 + 64 + 128 (all terms powers of 2), so
+		# Example: 236 = 4 + 8 + 32 + 64 + 128 (all terms powers of 2), so
 		# n_to_bin(236) = [4, 8, 32, 64, 128].
 		
 		assert isinstance(n, int)
