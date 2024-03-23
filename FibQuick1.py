@@ -5,7 +5,6 @@ fib(0) = 0, fib(1) = 1, and fib(n + 2) = fib(n + 1) + fib(n) for n in
 from __future__ import annotations
 
 from collections.abc import Generator
-from random import randint
 from time import perf_counter_ns
 from functools import lru_cache, reduce, wraps
 from operator import mul, pow
@@ -18,52 +17,19 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def _twos_complement(n: int) -> int:
-	"""Return two's complement of n."""
-	
-	return ~n + 1
-
-
 def twos_complement(n: int) -> int:
 	"""Return the int that is represented by the two's complement of n."""
 
 	# To get the two's complement of (say) n = 108 = 0b1101100,
-	# a) flip all bits to get 0b0010011,
+	# a) flip all bits to get 0b0010011
 	# b) add 1 to get 0b0010100.
 
 	# Many systems are two's complement systems and then the two's complement
 	# of n is simply -n. Only use this function on systems that are not two's
 	# complement systems. On two's complement systems this function will be
 	# replaced by function neg_n (see below).
-	assert not __is_twos_complement_system
 	
-	return _twos_complement(n)
-
-
-def is_twos_complement_system(nr_tests: int = 1, range_max: int = 12345) \
-	-> bool:
-	"""Return True if negative numbers are represented as two's complement,
-	else False. A list of 'nr_tests' random numbers in range(0, range_max) is
-	used to test the system."""
-	
-	nr_tests = max(1, int(nr_tests))
-	range_max = max(int(range_max), int(nr_tests))
-	random_ints = (randint(0, range_max) for _ in range(nr_tests))
-	
-	return all(n & -n == n & _twos_complement(n) for n in random_ints)
-
-
-def neg_n(n: int) -> int:
-	"""Return -n."""
-	
-	return -n
-
-
-if __is_twos_complement_system := is_twos_complement_system():
-	# Overwrite the expensive calculation of two's complement used for systems
-	# that don't use two's complement for negative numbers with the fast and
-	# easy one: neg_n(n) returns -n.
-	twos_complement = neg_n
+	return ~n + 1
 
 
 def time_me(f: Callable[P, T]) -> Callable[P, T]:
@@ -159,7 +125,7 @@ class QuickFib:
 
 	@time_me
 	def fib(self, n: int) -> int:
-		"""Return the n-th fib nr. f(n), that is, the n-th number in  sequence
+		"""Return the n-th fib nr. f(n), that is, the n-th number in sequence
 		f(0), f(1), f(2), f(3), ... = 0, 1, 1, 2, 3, 5, 8, 13, etc."""
 
 		return self._fib(n)
@@ -176,20 +142,19 @@ class QuickFib:
 		with k_1 > k_2 > k_3 > ... > k_m, such that n = sum(exps)."""
 		
 		# Example: since bin(236) = 0b11101100 <=>
-		# 236 = 4 + 8 + 32 + 64 + 128
-		#     = 2 ** 2 + 2 ** 3 + 2 ** 5 + 2 ** 6 + 2 ** 7 <=>
+		# 236 = 4 + 8 + 32 + 64 + 128 (all terms powers of 2), so
 		# n_to_bin(236) = [4, 8, 32, 64, 128].
 		
 		assert isinstance(n, int)
 		assert n >= 0
 		
 		# The result of 'bitwise AND'ing a number n with its two's complement
-		# is equal to binary all 0 bits except for the least significant set
-		# bit in n, so if n = 108 then:
-		# n                             = 1101100 (128)
+		# is all 0 bits except for the least significant set bit in n, so if
+		# n = 108 then:
+		# n                             = 1101100 (108)
 		# two's complement of n         = 0010100 ( 20)
 		# t = n & two's complement of n = 0000100 (  4)
-		# which is 2 ** p with p the zero-based bitposition of the least
+		# which is 2 ** p with p = 2 the zero-based bitposition of the least
 		# significant set bit in n.
 		#
 		# The result of n ^ t (bitwise XOR) sets the least significant set bit
@@ -198,8 +163,8 @@ class QuickFib:
 		# t     = 0000100 (  4)
 		# n ^ t = 1101000 (104)
 		#
-		# As a result the loop is executed once for every 1 bit in n, that is,
-		# a value 2 ** p is yielded for bit at position p if set in n.
+		# As a result the loop is executed once for every set bit in n, that
+		# is, a value 2 ** p is yielded for bit at position p if set in n.
 
 		while n:
 			# Do not use 'yield(t:=n & twos_complement(n))', since PyCharm
@@ -212,7 +177,6 @@ class QuickFib:
 
 def _main() -> None:
 	
-	print(f"{__is_twos_complement_system=}")
 	set_int_max_str_digits(3000000)
 
 	m = 1234567
