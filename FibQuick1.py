@@ -1,6 +1,6 @@
 """A somewhat quick way to calculate the n-th fib number fib(n), with
 fib(0) = 0, fib(1) = 1, and fib(n + 2) = fib(n + 1) + fib(n) for n in
-{0, 1, 2, ..}."""
+{0, 1, 2, ...}."""
 
 from __future__ import annotations
 
@@ -18,16 +18,10 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def ones_complement(n: int) -> int:
-	"""Return ones complement (all bits flipped) of n."""
-	
-	return int(''.join('0' if c == '1' else '1' for c in bin(n)[2:]), 2)
-
-
 def _twos_complement(n: int) -> int:
 	"""Return two's complement of n."""
 	
-	return ones_complement(n) + 1
+	return ~n + 1
 
 
 def twos_complement(n: int) -> int:
