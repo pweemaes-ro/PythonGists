@@ -117,8 +117,18 @@ class QuickFib:
 		if n < 2:
 			return n
 
-		m_powers = (pow(self.M, exp) for exp in self.get_exps(n - 1))
-		return reduce(mul, m_powers).matrix[0][0]  # type: ignore[no-any-return]
+		if n == 2:
+			return 1
+
+		# if M ** (n - 2) = ((a, b), (c, d)) then
+		# ((F(n - 1), F(n - 2))) = (M ** (n - 2)) * ((1, 0)) = ((a, c)),
+		# so F(n) = F(n - 1) + F(n - 2) = a + c, and for all n >= 0 we have
+		# if M ** n = ((a, b), (c, d)) then c = b, so
+		# F(n) = a + c = a + b = sum((M ** (n - 2))[0]),
+		
+		return sum(reduce(mul,
+		           (pow(self.M, exp)
+		            for exp in self.get_exps(n - 2))).matrix[0])
 
 	@time_me
 	def fib(self, n: int) -> int:
@@ -140,7 +150,7 @@ class QuickFib:
 		n = sum(exps)."""
 		
 		# Example: 236 = 4 + 8 + 32 + 64 + 128 (all terms powers of 2), so
-		# n_to_bin(236) = [4, 8, 32, 64, 128].
+		# list(n_to_bin(236)) = [4, 8, 32, 64, 128].
 		
 		assert isinstance(n, int)
 		assert n >= 0
@@ -180,7 +190,8 @@ def _main() -> None:
 	qf = QuickFib()
 
 	print(f"{list(qf.get_exps(m))=}")
-	print(f"fib({m}) has {len(str(qf.fib(m)))} digits.")
+	fib_m_as_str = str(qf.fib(m))
+	print(f"{fib_m_as_str} has {len(fib_m_as_str)} digits.")
 	print(f"{qf.pow_cache_info()=}")
 	print(f"{qf.fib_cache_info()=}")
 
