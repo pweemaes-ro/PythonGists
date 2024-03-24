@@ -11,6 +11,8 @@ from operator import mul, pow
 from sys import set_int_max_str_digits
 from typing import TypeAlias, TypeVar, Callable, ParamSpec, NamedTuple
 
+import numpy as np
+
 matrix: TypeAlias = tuple[tuple[int, int], tuple[int, int]]
 
 T = TypeVar("T")
@@ -185,14 +187,39 @@ def _main() -> None:
 	
 	set_int_max_str_digits(3000000)
 
-	m = 1234567
+	test_data = [
+		[1, 1, 1, 1],
+		[12, 144, 144, 3],
+		[123, 22698, 75682, 26],
+		[1234, 34774, 48487, 258],
+		[12345, 40080, 27970, 2580],
+		[123456, 26830, 51392, 25801],
+		[1234567, 78446, 95853, 258009]
+	]
+
 	qf = QuickFib()
 
-	print(f"{list(qf.get_exps(m))=}")
-	fib_m_as_str = str(qf.fib(m))
-	print(f"{fib_m_as_str} has {len(fib_m_as_str)} digits.")
-	print(f"{qf.pow_cache_info()=}")
-	print(f"{qf.fib_cache_info()=}")
+	for repeat in range(2):
+		for n, first_five_digits, last_five_digits, nr_digits in test_data:
+			# print(f"{list(qf.get_exps(n))=}")
+			fib_n_as_str = str(qf.fib(n))
+			assert str(first_five_digits) == fib_n_as_str[:5]
+			assert str(last_five_digits) == fib_n_as_str[-1:-6:-1][::-1], \
+				f"{str(last_five_digits)} vs {fib_n_as_str[-1:-6:-1][::-1]}"
+			assert nr_digits == len(fib_n_as_str)
+		
+		print(f"{qf.pow_cache_info()=}")
+		print(f"{qf.fib_cache_info()=}")
 
+def numpy_playground() -> None:
+	identity = np.array([[1, 0], [0, 1]])
+	m = np.array([[1, 1], [1, 0]])
+	# m = np.matmul(identity, m)
+	# m = np.matmul(m, m)
+	# m = np.matmul(m, m)
+	m = np.linalg.matrix_power(m, 10)
+	print(type(m))
+	print(m)
 
-_main()
+# _main()
+numpy_playground()
