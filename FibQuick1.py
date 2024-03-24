@@ -53,8 +53,7 @@ class QuickFib:
 		"""A simple 2x2 matrix class that supports * (__mul__) operator for
 		multiplication and ** (__pow__) FOR EXPONENTS THAT ARE POWERS OF 2."""
 		
-		def __init__(self, _matrix: matrix):
-
+		def __init__(self, _matrix: matrix) -> None:
 			self.matrix = _matrix
 		
 		def __mul__(self, other: QuickFib.FibMatrix) -> QuickFib.FibMatrix:
@@ -77,7 +76,7 @@ class QuickFib:
 			# Note: cache_info is a named tuple (not a string).
 			return self.__pow__.cache_info()
 		
-		@lru_cache()
+		@lru_cache(maxsize=400)     # That should suffice ;-)
 		def __pow__(self, power: int) -> QuickFib.FibMatrix:
 			"""Return matrix ** power. Is recursive, but should be safe as long
 			as no powers with more than 400 or so set bits are used..."""
@@ -94,7 +93,7 @@ class QuickFib:
 			assert len(list(QuickFib.get_exps(power))) == 1
 			
 			# We use simple math rule (for power a power of 2):
-			#   m ** power = m ** (power // 2) * m ** (power // 2)
+			#   m ** power = (m ** (power // 2)) * (m ** (power // 2))
 			h = self ** (power >> 1)
 			return h * h
 			
