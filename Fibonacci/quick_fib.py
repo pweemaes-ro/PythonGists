@@ -1,10 +1,13 @@
-"""Functionality used by multiple fib implementations."""
+"""Functionality used by multiple fib implementations and a base class for Fib
+implementations."""
+
+from __future__ import annotations
+
+from abc import abstractmethod, ABC
 from collections.abc import Callable, Generator
 from functools import wraps, lru_cache
 from time import perf_counter_ns
-from typing import TypeVar, ParamSpec, NamedTuple, TypeAlias, Any
-
-import numpy as np
+from typing import TypeVar, ParamSpec, NamedTuple, TypeAlias
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -62,6 +65,7 @@ def mat_mul(first: matrix, second: matrix) -> matrix:
 
 M = ((1, 1), (1, 0))
 
+
 @lru_cache(maxsize=400)  # That should suffice ;-)
 def mat_pow(power: int) -> matrix:
 	"""Return matrix ** power. Is recursive, but should be safe as long
@@ -109,8 +113,55 @@ def time_me(f: Callable[P, T]) -> Callable[P, T]:
 		result = f(*args, **kwargs)
 		t_1 = perf_counter_ns()
 		print(f"{f.__qualname__}({args}) took "
-		# print(f"{f.__qualname__}({args[1]}) took "
+		      # print(f"{f.__qualname__}({args[1]}) took "
 		      f"{(t_1 - t_0) * 10 ** -9:<03.2f} secs.")
 		return result
 	
 	return _timed_f
+
+
+class QuickFib(ABC):
+	"""The base class"""
+	
+	def __init__(self) -> None:
+		self.__fib_timed = False
+		self._untimed_fib = self.fib
+
+	def set_fib_timing(self, value: bool) -> None:
+		"""Turn timing reporting on or off."""
+
+		if self.__fib_timed is not value:
+			if value:   # must change to timed
+				setattr(self, "fib", time_me(getattr(self, "fib")))
+			else:       # must revert to untimed
+				setattr(self, "fib", getattr(self, "_untimed_fib"))
+
+			self.__fib_timed = value
+
+	@abstractmethod
+	@lru_cache(maxsize=None)
+	def cached_fib(self, n: int) -> int:
+		"""Should be implemented by derived classes."""
+		
+		...
+
+	def fib(self, n: int) -> int:
+		"""Return the n-th fib nr."""
+
+		assert isinstance(n, int)
+		assert n >= 0
+
+		if n <= 2:
+			return 1 if n == 2 else n
+
+		return self.cached_fib(n)
+	
+	def fib_cache_info(self) -> NamedTuple:
+		"""Return cache info for the cache holding fib nrs."""
+		
+		return self.cached_fib.cache_info()
+	
+	def clear_fib_cache(self) -> None:
+		"""Clear all caches..."""
+		
+		self.cached_fib.cache_clear()

@@ -4,8 +4,8 @@ from sys import set_int_max_str_digits
 
 import pytest
 
-from Fibonacci.FibQuick_PP import QuickFib as QF_Pure_Python
-from Fibonacci.FibQuick_NP import QuickFib as QF_Numpy
+from Fibonacci.quick_fib_pp import QuickFibPP as QF_Pure_Python
+from Fibonacci.quick_fib_np import QuickFibNP as QF_Numpy
 
 set_int_max_str_digits(3000000)
 
