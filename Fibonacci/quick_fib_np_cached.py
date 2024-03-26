@@ -1,33 +1,38 @@
-"""Numpy implementation of a pretty fast way to calculate Fib(n)."""
+"""Numpy implementation of a pretty fast way to calculate Fib(n). This version
+uses np.matmul for both calculating powers of m and product of powers of m, and
+therefore uses caching of powers of m."""
 from timeit import timeit
-from functools import lru_cache
+from functools import lru_cache, reduce
 from sys import set_int_max_str_digits
-from Fibonacci.quick_fib import QuickFib, mat_pow
+
+from Fibonacci.quick_fib import QuickFib, get_powers_of_two, power_of_m_np
 import numpy as np
 
 
-class QuickFibNP(QuickFib):
+class QuickFibNPCached(QuickFib):
 	"""A simple class for quick calculations of fib(n)."""
 
-	__m = np.array([[1, 1], [1, 0]], dtype=object)
-	
 	@lru_cache(maxsize=None)
 	def cached_fib(self, n: int) -> int:
-		"""Fast fib(n) calculation for n > 2."""
+		"""Fast fib(n) calculation using NumPy."""
 		
 		assert isinstance(n, int)
-		assert n > 2
 		
-		return sum(np.linalg.matrix_power(self.__m, n - 2)[0])
+		if n <= 2:
+			return 1 if n == 2 else n
+		
+		return sum(reduce(np.matmul,
+		                  (power_of_m_np(exponent)
+		                   for exponent in get_powers_of_two(n - 2)))[0])
 
 
 if __name__ == "__main__":
-	def _clear_all_caches(quickfib: QuickFibNP) -> None:
-		quickfib.clear_fib_cache()
-		mat_pow.cache_clear()
-	
-	
-	def _timeit(quickfib: QuickFibNP) -> None:
+	def _clear_all_caches(quickfib: QuickFibNPCached) -> None:
+		quickfib.cached_fib.cache_clear()
+		power_of_m_np.cache_clear()
+
+
+	def _timeit(quickfib: QuickFibNPCached) -> None:
 		# print(f"{pow_cache_info()=}")
 		# print(f"{qb.fib_cache_info()=}")
 		
@@ -64,8 +69,13 @@ if __name__ == "__main__":
 	
 	set_int_max_str_digits(3000000)
 	
-	qb = QuickFibNP()
-	qb.set_fib_timing(True)
+	qb = QuickFibNPCached()
+	qb.set_fib_timing(False)
 	print(timeit("_timeit(qb)", number=10, globals=globals()))
-	# print(f"{pow_cache_info()=}")
-	print(f"{qb.fib_cache_info()=}")
+	print(f"{qb.cached_fib.cache_info()=}")
+	print(f"{power_of_m_np.cache_info()=}")
+	
+	# qb.set_fib_timing(False)
+	# print(timeit("_timeit(qb)", number=10, globals=globals()))
+	# print(f"{qb.fib_cache_info()=}")
+	# print(f"{power_of_m_np.cache_info()=}")
