@@ -101,8 +101,10 @@ def power_of_m_np(power: int) -> matrix:
 	# Make sure power is itself a power of 2.
 	assert len(list(get_powers_of_two(power))) == 1
 	
-	h = np.array(power_of_m_np(power >> 1), dtype=object)
-	r = np.matmul(h, h)
+	h = power_of_m_np(power >> 1)
+	
+	h_np = np.array(h, dtype=object)
+	r = np.matmul(h_np, h_np)
 	return r[0], r[1]
 
 	
