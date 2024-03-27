@@ -11,7 +11,10 @@ if __name__ == "__main__":
 		t_1 = (100, 200, 300)
 		l_1 = ['a', 'b', 'c']
 		
-		items_1, items_2, items_3 = [], [], []
+		items_1: list[int | str] = []
+		items_2: list[int | str] = []
+		items_3: list[int | str] = []
+
 		# The following supplies FOUR starred_items
 		for i in *r_1, *r_2, *t_1, *l_1:
 			items_1.append(i)

@@ -40,7 +40,13 @@ def my_function(key: str, count: int, posix: str,
 	print(f"{key=}, {count=}, {posix=}, {useless=}, {extra=}")
 
 
+partial_params = {"key": 'a', "count": 10, "posix": "QQQ"}
 fixed_key_func = my_partial(my_function, key='a', count=10, posix="QQQ")
 fixed_key_func(extra="Xtra")
+fixed_key_func = my_partial(my_function, **partial_params)
+fixed_key_func(extra="Xtra")
 
-py_f = partial(my_function('a'))
+py_f = partial(my_function, key='a', count=10, posix="QQQ")
+py_f(extra="Xtra")
+py_f = partial(my_function, **partial_params)
+py_f(extra="Xtra")
