@@ -38,12 +38,6 @@ from Fibonacci.quick_fib_pp import QuickFibPP
 class PhiRational:
 	"""PhiRational class, supports only what's needed for calculating fib(n)."""
 
-	# coordindates for phi and psi
-	phi = (0, 1)
-	psi = (1, -1)
-	
-	PHI = 1.61803398875
-
 	def __init__(self, a: Fraction | int, b: Fraction | int) -> None:
 		
 		self.a = Fraction(a)
@@ -60,12 +54,12 @@ class PhiRational:
 		return PhiRational((self.a + self.b) / self.norm(), -self.b / self.norm())
 
 	def __int__(self) -> int:
-		
-		if self.b == 0:
-			return int(self.a)
-		else:
-			return int(self.a + self.b * PhiRational.PHI)
-
+		"""Return the int version of PhiRational. Since it's assumed this is
+		called only as final step in fib(n) calculation (so self.b == 0),
+		I've removed the test and the calculation in case self.b != 0."""
+	
+		return int(self.a)
+	
 	def __sub__(self, other: PhiRational) -> PhiRational:
 		
 		return PhiRational(self.a - other.a, self.b - other.b)
@@ -86,47 +80,26 @@ class PhiRational:
 		
 		return self.a == other.a and self.b == other.b
 
-	@staticmethod
-	@lru_cache(maxsize=400)
-	def phi_pow(n: int) -> PhiRational:
-		"""Cached version of power of phi calculation."""
+	def __hash__(self) -> int:
 
-		if n == 1:
-			return PhiRational(*PhiRational.phi)
-		
-		h = PhiRational.phi_pow(n >> 1)
-		return h * h
-
-	@staticmethod
-	@lru_cache(maxsize=400)
-	def psi_pow(n: int) -> PhiRational:
-		"""Cached version of power of psi calculation."""
-		
-		# assert len(list(get_powers_of_two(n))) == 1
-		
-		if n == 1:
-			return PhiRational(*PhiRational.psi)
+		return hash((self.a, self.b))
 	
-		h = PhiRational.psi_pow(n >> 1)
-		return h * h
-
+	@lru_cache(maxsize=400)
 	def __pow__(self, n: int) -> PhiRational:
 
-		if self == PhiRational(*PhiRational.phi):
-			return self.phi_pow(n)
+		if n == 1:
+			return self
 		
-		if self == PhiRational(*PhiRational.psi):
-			return self.psi_pow(n)
+		h = self.__pow__(n >> 1)
+		return h * h
 		
-		raise ValueError("__pow__ only supported for base phi and base psi!")
-	
 	def __repr__(self) -> str:
 		return f'({self.a} + {self.b}φ)'
 
 
-phi = PhiRational(0, 1)
-psi = PhiRational(1, -1)
-sqrt_5 = PhiRational(-1, 2)
+__phi = PhiRational(0, 1)
+__psi = PhiRational(1, -1)
+__sqrt_5 = PhiRational(-1, 2)
 
 
 @lru_cache
@@ -140,13 +113,13 @@ def fib_closed(n: int) -> int:
 	
 	powers = list(get_powers_of_two(n))
 
-	powers_of_phi = list(phi ** power for power in powers)
-	powers_of_psi = list(psi ** power for power in powers)
+	powers_of_phi = list(__phi ** power for power in powers)
+	powers_of_psi = list(__psi ** power for power in powers)
 	
 	nth_power_of_phi = reduce(mul, powers_of_phi)
 	nth_power_of_psi = reduce(mul, powers_of_psi)
 	
-	return int((nth_power_of_phi - nth_power_of_psi) / sqrt_5)
+	return int((nth_power_of_phi - nth_power_of_psi) / __sqrt_5)
 
 
 if __name__ == "__main__":
@@ -166,8 +139,6 @@ if __name__ == "__main__":
 			assert qf == qc
 	
 		print(power_of_m.cache_info())
-		print(PhiRational.phi_pow.cache_info())
-		print(PhiRational.psi_pow.cache_info())
+		print(PhiRational.__pow__.cache_info())
 
 	_main()
-	
