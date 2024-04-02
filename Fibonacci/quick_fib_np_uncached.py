@@ -8,7 +8,7 @@ from Fibonacci.quick_fib import QuickFib, power_of_m_np
 import numpy as np
 
 
-class QuickFibNP2Uncached(QuickFib):
+class QuickFibNPUncached(QuickFib):
 	"""A simple class for quick calculations of fib(n)."""
 
 	__m = np.array([[1, 1], [1, 0]], dtype=object)
@@ -18,6 +18,7 @@ class QuickFibNP2Uncached(QuickFib):
 		"""Fast fib(n) calculation using NumPy."""
 		
 		assert isinstance(n, int)
+		assert n >= 0
 
 		if n <= 2:
 			return 1 if n == 2 else n
@@ -26,16 +27,16 @@ class QuickFibNP2Uncached(QuickFib):
 	
 
 if __name__ == "__main__":
-	def _clear_all_caches(quickfib: QuickFibNP2Uncached) -> None:
-		quickfib.cached_fib.cache_clear()
+	def _clear_all_caches(quickfib_npuc: QuickFibNPUncached) -> None:
+		quickfib_npuc.cached_fib.cache_clear()
 		power_of_m_np.cache_clear()
 	
 	
-	def _timeit(quickfib: QuickFibNP2Uncached) -> None:
+	def _timeit(quickfib: QuickFibNPUncached) -> None:
 		# print(f"{pow_cache_info()=}")
 		# print(f"{qb.fib_cache_info()=}")
 		
-		_clear_all_caches(quickfib)
+		# _clear_all_caches(quickfib_npuc)
 		
 		# print(f"{pow_cache_info()=}")
 		# print(f"{qb.fib_cache_info()=}")
@@ -68,7 +69,11 @@ if __name__ == "__main__":
 	
 	set_int_max_str_digits(3000000)
 	
-	qb = QuickFibNP2Uncached()
+	# qb = QuickFibNPUncached()
+	# qb.set_fib_timing(True)
+	# qb.fib(1234567)
+	#
+	qb = QuickFibNPUncached()
 	qb.set_fib_timing(False)
 	print(timeit("_timeit(qb)", number=10, globals=globals()))
 	print(f"{qb.cached_fib.cache_info()=}")

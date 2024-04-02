@@ -8,7 +8,7 @@ from operator import mul
 from fractions import Fraction
 from time import perf_counter_ns
 
-from Fibonacci.quick_fib import get_powers_of_two, power_of_m
+from Fibonacci.quick_fib import get_powers_of_two, power_of_m, QuickFib
 from Fibonacci.quick_fib_pp import QuickFibPP
 
 
@@ -61,21 +61,28 @@ class PhiRational:
 		return int(self.a)
 	
 	def __sub__(self, other: PhiRational) -> PhiRational:
+
+		assert isinstance(other, PhiRational)
 		
 		return PhiRational(self.a - other.a, self.b - other.b)
 		
 	def __mul__(self, other: PhiRational) -> PhiRational:
 
+		assert isinstance(other, PhiRational)
+		
 		a, b = self.a, self.b
 		c, d = other.a, other.b
 		
 		return PhiRational(a * c + b * d, a * d + b * c + b * d)
 
 	def __truediv__(self, other: PhiRational) -> PhiRational:
-
+		
+		assert isinstance(other, PhiRational)
+		
 		return self * other.reciprocal()
 
 	def __eq__(self, other: object) -> bool:
+		
 		assert isinstance(other, PhiRational)
 		
 		return self.a == other.a and self.b == other.b
@@ -87,6 +94,9 @@ class PhiRational:
 	@lru_cache(maxsize=400)
 	def __pow__(self, n: int) -> PhiRational:
 
+		assert isinstance(n, int)
+		assert n >= 1
+
 		if n == 1:
 			return self
 		
@@ -97,42 +107,48 @@ class PhiRational:
 		return f'({self.a} + {self.b}φ)'
 
 
-__phi = PhiRational(0, 1)
-__psi = PhiRational(1, -1)
-__sqrt_5 = PhiRational(-1, 2)
-
-
-@lru_cache
-def fib_closed(n: int) -> int:
-	"""Return the n-th fib nr."""
+class QuickFibClosed(QuickFib):
+	__phi = PhiRational(0, 1)
+	__psi = PhiRational(1, -1)
+	__sqrt_5 = PhiRational(-1, 2)
 	
-	assert isinstance(n, int)
-	assert n >= 0
-	if n < 2:
-		return n
+	def fib(self, n: int) -> int:
+		return self.cached_fib(n)
 	
-	powers = list(get_powers_of_two(n))
-
-	powers_of_phi = list(__phi ** power for power in powers)
-	powers_of_psi = list(__psi ** power for power in powers)
+	@lru_cache(maxsize=None)
+	def cached_fib(self, n: int) -> int:
+		# def fib_closed(n: int) -> int:
+		"""Return the n-th fib nr."""
+		
+		assert isinstance(n, int)
+		assert n >= 0
+		
+		if n < 2:
+			return n
+		
+		powers = list(get_powers_of_two(n))
 	
-	nth_power_of_phi = reduce(mul, powers_of_phi)
-	nth_power_of_psi = reduce(mul, powers_of_psi)
-	
-	return int((nth_power_of_phi - nth_power_of_psi) / __sqrt_5)
+		powers_of_phi = list(self.__phi ** power for power in powers)
+		powers_of_psi = list(self.__psi ** power for power in powers)
+		
+		nth_power_of_phi = reduce(mul, powers_of_phi)
+		nth_power_of_psi = reduce(mul, powers_of_psi)
+		
+		return int((nth_power_of_phi - nth_power_of_psi) / self.__sqrt_5)
 
 
 if __name__ == "__main__":
 	def _main() -> None:
-		quickfib = QuickFibPP()
+		quickfibpp = QuickFibPP()
+		quickfitcf = QuickFibClosed()
 		set_int_max_str_digits(3000000)
 		
 		n = 45678
 		for i in range(n-5, n+1):
 			t_0 = perf_counter_ns()
-			qf = str(quickfib.fib(i))
+			qf = str(quickfibpp.fib(i))
 			t_1 = perf_counter_ns()
-			qc = str(fib_closed(i))
+			qc = str(quickfitcf.fib(i))
 			t_2 = perf_counter_ns()
 			print(t_1 - t_0, qf[:5], qf[-5:])
 			print(t_2 - t_1, qc[:5], qf[-5:])

@@ -17,6 +17,7 @@ class QuickFibNPCached(QuickFib):
 		"""Fast fib(n) calculation using NumPy."""
 		
 		assert isinstance(n, int)
+		assert n >= 0
 		
 		if n <= 2:
 			return 1 if n == 2 else n
@@ -36,7 +37,7 @@ if __name__ == "__main__":
 		# print(f"{pow_cache_info()=}")
 		# print(f"{qb.fib_cache_info()=}")
 		
-		_clear_all_caches(quickfib)
+		# _clear_all_caches(quickfib_npuc)
 		
 		# print(f"{pow_cache_info()=}")
 		# print(f"{qb.fib_cache_info()=}")
@@ -69,6 +70,10 @@ if __name__ == "__main__":
 	
 	set_int_max_str_digits(3000000)
 	
+	# qb = QuickFibNPCached()
+	# qb.set_fib_timing(True)
+	# qb.fib(1234567)
+	#
 	qb = QuickFibNPCached()
 	qb.set_fib_timing(False)
 	print(timeit("_timeit(qb)", number=10, globals=globals()))

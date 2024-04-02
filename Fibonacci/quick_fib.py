@@ -43,7 +43,7 @@ def get_powers_of_two(n: int) -> Generator[int, None, None]:
 	assert n >= 0
 	
 	# The result of 'bitwise AND'ing a number n with its two's complement
-	# is all 0 bits except for the least significant set bit in n, so if
+	# is all 0 bits except for the least significant set bit in n, so if (say)
 	# n = 108 then:
 	# n                             = 1101100 (108)
 	# two's complement of n         = 0010100 ( 20)
@@ -51,12 +51,13 @@ def get_powers_of_two(n: int) -> Generator[int, None, None]:
 	# which is 2 ** p with p = 2 the zero-based bitposition of the least
 	# significant set bit in n.
 	#
-	# n^t (bitwise XOR) sets the least significant 1 bit of n to 0:
+	# Assuming the above concerning n and t, the bitwise XOR operation n^t sets
+	# the least significant set bit of n to 0:
 	# n   = 1101100 (108)
 	# t   = 0000100 (  4)
 	# n^t = 1101000 (104)
 	#
-	# So the loop is executed once for every set bit in n.
+	# So the while loop is executed once for every set bit in n.
 	
 	while n:
 		# noinspection PyRedundantParentheses
@@ -67,10 +68,11 @@ def get_powers_of_two(n: int) -> Generator[int, None, None]:
 def mat_mul(first: matrix, second: matrix) -> matrix:
 	"""Return matrix product first * second. Both matrices must be 2 x 2."""
 	
+	# both matrices must be 2 x 2 square
 	assert len(first) == len(second) == 2
 	assert len(first[0]) == len(second[0]) == 2
 	assert len(first[1]) == len(second[1]) == 2
-	
+
 	a = first[0][0]
 	b = first[0][1]
 	c = first[1][0]
