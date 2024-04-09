@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from Flatten import flatten, flatten_g
+from flatten import flatten, flatten_g
 
 
 @pytest.fixture

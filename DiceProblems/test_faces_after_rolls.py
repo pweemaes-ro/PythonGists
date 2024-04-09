@@ -1,7 +1,7 @@
 """Obvious..."""
 import pytest
 
-from FacesAfterRolls import faces, do_rolls
+from faces_after_rolls import faces, do_rolls
 
 dice = {face: face for face in faces}
 
